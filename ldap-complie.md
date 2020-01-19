@@ -9,4 +9,168 @@ cnetos8沒有openldap-server，所以自己下載tarball然後編譯。
 wget ftp://ftp.openldap.org/pub/OpenLDAP/openldap-release/openldap-2.4.48.tgz
 ```
 
+下載完後解壓縮  
+```bash
+# tar -zxf openldap-2.4.48.tgz openldap-2.4.48/
+# ll
+總計 5584
+-rw-------.  1 root root    1590  1月 18 09:20 anaconda-ks.cfg
+-rw-r--r--.  1 root root    1522  1月 18 10:05 firewall.sh
+drwxr-xr-x. 10 1005  501    4096  7月 23 10:46 openldap-2.4.48
+-rw-r--r--.  1 root root 5704883  1月 18 10:24 openldap-2.4.48.tgz
+```
+
+進入解壓縮後的目錄
+```bash
+# cd openldap-2.4.48/
+# ll
+總計 1156
+-rw-r--r--. 1 1005 501 249747  7月 23 10:46 aclocal.m4
+-rw-r--r--. 1 1005 501   3836  7月 23 10:46 ANNOUNCEMENT
+drwxr-xr-x. 2 1005 501   4096  7月 23 10:46 build
+-rw-r--r--. 1 1005 501  97704  7月 23 10:46 CHANGES
+drwxr-xr-x. 3 1005 501     38  7月 23 10:46 clients
+-rwxr-xr-x. 1 1005 501 698872  7月 23 10:46 configure
+-rw-r--r--. 1 1005 501  96203  7月 23 10:46 configure.in
+drwxr-xr-x. 7 1005 501    129  7月 23 10:46 contrib
+-rw-r--r--. 1 1005 501   2345  7月 23 10:46 COPYRIGHT
+drwxr-xr-x. 8 1005 501    102  7月 23 10:46 doc
+drwxr-xr-x. 3 1005 501   4096  7月 23 10:46 include
+-rw-r--r--. 1 1005 501   4415  7月 23 10:46 INSTALL
+drwxr-xr-x. 9 1005 501    140  7月 23 10:46 libraries
+-rw-r--r--. 1 1005 501   2214  7月 23 10:46 LICENSE
+-rw-r--r--. 1 1005 501    975  7月 23 10:46 Makefile.in
+-rw-r--r--. 1 1005 501   3495  7月 23 10:46 README
+drwxr-xr-x. 3 1005 501     38  7月 23 10:46 servers
+drwxr-xr-x. 5 1005 501     93  7月 23 10:46 tests
+```
+
+接下來要製作Makefile  
+'--prefix=/usr/local/openldap'是指定之後要安裝在哪個目錄  
+```bash
+# ./configure --prefix=/usr/local/openldap
+Configuring OpenLDAP 2.4.48-Release ...
+checking build system type... x86_64-unknown-linux-gnu
+checking host system type... x86_64-unknown-linux-gnu
+checking target system type... x86_64-unknown-linux-gnu
+checking for a BSD-compatible install... /bin/install -c
+checking whether build environment is sane... yes
+checking for gawk... gawk
+checking whether make sets $(MAKE)... no
+checking configure arguments... done
+checking for cc... no
+checking for gcc... no
+configure: error: Unable to locate cc(1) or suitable replacement.  Check PATH or set CC.
+```
+
+這邊直接使用configure的話會發現錯誤，是因為缺少了一些東西，這時候直接安裝Development Tools  
+```bash
+# yum groupinstall 'Development Tools'
+```
+
+接著重新執行configure
+```bash
+# ./configure --prefix=/usr/local/openldap
+....
+checking for db.h... no
+configure: error: BDB/HDB: BerkeleyDB not available
+```
+
+然後又遇到問題.......唉，只能解決了  
+```bash
+# yum install libdb-devel
+```
+
+完成後會長這樣，照著指示執行make depend
+```bash
+Making servers/slapd/backends.c
+    Add config ...
+    Add ldif ...
+    Add monitor ...
+    Add bdb ...
+    Add hdb ...
+    Add mdb ...
+    Add relay ...
+Making servers/slapd/overlays/statover.c
+    Add syncprov ...
+Please run "make depend" to build dependencies
+
+# make depend
+....
+Entering subdirectory man8
+make[3]: Entering directory '/root/openldap-2.4.48/doc/man/man8'
+make[3]: Nothing to be done for 'depend'.
+make[3]: Leaving directory '/root/openldap-2.4.48/doc/man/man8'
+
+make[2]: Leaving directory '/root/openldap-2.4.48/doc/man'
+
+make[1]: Leaving directory '/root/openldap-2.4.48/doc'
+```
+
+接著終於可以make了!!!!
+```bash
+# make
+make[3]: Leaving directory '/root/openldap-2.4.48/doc/man/man8'
+
+make[2]: Leaving directory '/root/openldap-2.4.48/doc/man'
+
+make[1]: Leaving directory '/root/openldap-2.4.48/doc'
+```
+
+* 然後這個步驟可做可不做，會花上一些時間，我覺得可以跳過啦，時間多再做
+```bash
+# make test
+....
+0 tests for mdb were skipped.
+make[2]: Leaving directory '/root/openldap-2.4.48/tests'
+make[1]: Leaving directory '/root/openldap-2.4.48/tests'
+```
+
+最後就是安裝啦~  
+```bash
+# make install
+....
+done
+installing slapacl.8 in /usr/local/openldap/share/man/man8
+installing slapadd.8 in /usr/local/openldap/share/man/man8
+installing slapauth.8 in /usr/local/openldap/share/man/man8
+installing slapcat.8 in /usr/local/openldap/share/man/man8
+installing slapd.8 in /usr/local/openldap/share/man/man8
+installing slapdn.8 in /usr/local/openldap/share/man/man8
+installing slapindex.8 in /usr/local/openldap/share/man/man8
+installing slappasswd.8 in /usr/local/openldap/share/man/man8
+installing slapschema.8 in /usr/local/openldap/share/man/man8
+installing slaptest.8 in /usr/local/openldap/share/man/man8
+make[3]: Leaving directory '/root/openldap-2.4.48/doc/man/man8'
+
+make[2]: Leaving directory '/root/openldap-2.4.48/doc/man'
+
+make[1]: Leaving directory '/root/openldap-2.4.48/doc'
+```
+可以看到東西都安裝在/usr/local/openldap/這個剛剛指定的目錄下。
+
+## 試試看能不能用slapd  
+首先要先指定設定檔跟目錄。  
+```bash
+# /usr/local/openldap/sbin/slapadd -n 0 -F /usr/local/openldap/etc/openldap/slapd.d -l /usr/local/openldap/etc/openldap/slapd.ldif
+5e2405af invalid config directory /usr/local/openldap/etc/slapd.d, error 2
+slapadd: bad configuration directory!
+
+少了目錄
+# mkdir /usr/local/openldap/etc/slapd.d
+# ll /usr/local/openldap/etc/slapd.d
+總計 0
+
+重新指定
+# /usr/local/openldap/sbin/slapadd -n 0 -F /usr/local/openldap/etc/openldap/slapd.d -l /usr/local/openldap/etc/openldap/slapd.ldif
+_#################### 100.00% eta   none elapsed            none fast!
+```
+
+啟動  
+```bash
+# /usr/local/openldap/libexec/slapd -F /usr/local/openldap/etc/openldap/slapd.d
+# ps aux |grep slapd
+root      1571  0.0  0.0  53212  4924 ?        Ssl  02:55   0:00 /usr/local/openldap/libexec/slapd -F /usr/local/openldap/etc/openldap/slapd.d
+root      1574  0.0  0.0  12108  1028 pts/0    S+   02:55   0:00 grep --color=auto slapd
+```
 
