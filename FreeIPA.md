@@ -176,4 +176,59 @@ files is the Directory Manager password
 The ipa-server-install command was successful
 ```
 
+## 設定防火牆  
+將上述提示到的port加入到防火牆即可。  
+這邊因為使用虛擬機所以就先將防火牆關閉。  
+```bash
+[root@ipa1 ~]# systemctl stop firewalld.service
+[root@ipa1 ~]# systemctl disable firewalld.service
+Removed /etc/systemd/system/multi-user.target.wants/firewalld.service.
+Removed /etc/systemd/system/dbus-org.fedoraproject.FirewallD1.service.
+```
+## 生成kerberos  
+```bash
+[root@ipa1 ~]# kinit admin
+Password for admin@EXAMPLE.COM:
 
+[root@ipa1 ~]# klist
+Ticket cache: KCM:0
+Default principal: admin@EXAMPLE.COM
+
+Valid starting       Expires              Service principal
+2020-02-27T15:57:15  2020-02-28T15:57:10  krbtgt/EXAMPLE.COM@EXAMPLE.COM
+```
+
+## IPA的網頁介面
+直接使用剛剛設定的 ipa1.example.com。  
+
+## 指令查詢
+```bash
+[root@ipa1 ~]# LANG=c ipa user-find
+--------------
+1 user matched
+--------------
+  User login: admin
+  Last name: Administrator
+  Home directory: /home/admin
+  Login shell: /bin/bash
+  Principal alias: admin@EXAMPLE.COM
+  UID: 727000000
+  GID: 727000000
+  Account disabled: False
+----------------------------
+Number of entries returned 1
+----------------------------
+```
+
+## 解除安裝
+```bash
+[root@ipa1 ~]# ipa-server-install --uninstall
+
+This is a NON REVERSIBLE operation and will delete all data and configuration!
+It is highly recommended to take a backup of existing data and configuration using ipa-backup utility before proceeding.
+Are you sure you want to continue with the uninstall procedure? [no]: yes
+
+If this server is the last instance of CA, KRA, or DNSSEC master, uninstallation may result in data loss.
+
+Are you sure you want to continue with the uninstall procedure? [no]: yes
+```
